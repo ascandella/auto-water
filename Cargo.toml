@@ -41,7 +41,8 @@ esp-radio = { version = "0.18.0", features = [
 ] }
 
 embassy-executor = { version = "0.10.0", default-features = false }
-embassy-time     = { version = "0.5.1", default-features = false }
+embassy-sync      = { version = "0.8.0", default-features = false }
+embassy-time      = { version = "0.5.1", default-features = false }
 embassy-net      = { version = "0.9.1", features = [
   "defmt",
   "tcp",

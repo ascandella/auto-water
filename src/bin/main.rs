@@ -16,11 +16,10 @@ use esp_hal::clock::CpuClock;
 use esp_hal::gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull};
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
-use esp_println::println;
 use esp_radio::wifi::{Config, WifiController, sta::StationConfig};
 
 use auto_water::handler::App;
-use auto_water::pins::{FLOAT_PIN, RELAY_PIN};
+use auto_water::pins::FLOAT_PIN;
 use auto_water::pump;
 use auto_water::server::Server;
 
@@ -49,22 +48,7 @@ async fn main(spawner: Spawner) {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let _ = peripherals.GPIO6;
-    let _ = peripherals.GPIO7;
-    let _ = peripherals.GPIO8;
-    let _ = peripherals.GPIO9;
-    let _ = peripherals.GPIO10;
-    let _ = peripherals.GPIO11;
-    let _ = peripherals.GPIO16;
-    let _ = peripherals.GPIO20;
-
-    critical_section::with(|cs| {
-        RELAY_PIN.borrow(cs).replace(Some(Output::new(
-            peripherals.GPIO26,
-            Level::Low,
-            OutputConfig::default(),
-        )));
-    });
+    let relay_pin = Output::new(peripherals.GPIO26, Level::Low, OutputConfig::default());
     critical_section::with(|cs| {
         FLOAT_PIN.borrow(cs).replace(Some(Input::new(
             peripherals.GPIO13,
@@ -94,15 +78,16 @@ async fn main(spawner: Spawner) {
         net_seed,
     );
 
+    spawner.spawn(pump_task_wrapper(relay_pin).unwrap());
+    spawner.spawn(watering_loop_wrapper().unwrap());
     spawner.spawn(connection(wifi_controller).unwrap());
     spawner.spawn(net_task(runner).unwrap());
-    spawner.spawn(watering_task().unwrap());
 
-    println!("Waiting for link up...");
+    info!("Waiting for link up...");
     stack.wait_config_up().await;
 
     if let Some(config) = stack.config_v4() {
-        println!("IP: {}", config.address);
+        info!("IP: {}", config.address);
     }
 
     let server = Server::new(App);
@@ -110,10 +95,13 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
-async fn watering_task() {
-    let float_pin = critical_section::with(|cs| FLOAT_PIN.borrow(cs).take().unwrap());
-    let mut relay_pin = critical_section::with(|cs| RELAY_PIN.borrow(cs).take().unwrap());
-    pump::watering_loop(&float_pin, &mut relay_pin).await;
+async fn pump_task_wrapper(pin: Output<'static>) {
+    pump::pump_task(pin).await;
+}
+
+#[embassy_executor::task]
+async fn watering_loop_wrapper() {
+    pump::watering_loop().await;
 }
 
 #[embassy_executor::task]

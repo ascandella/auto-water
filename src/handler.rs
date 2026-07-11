@@ -3,7 +3,7 @@ use core::cell::RefCell;
 use defmt::info;
 
 use crate::config::CONFIG;
-use crate::pins::{FLOAT_PIN, RELAY_PIN};
+use crate::pins::FLOAT_PIN;
 use crate::pump;
 use crate::server::{Handler, Response};
 
@@ -39,13 +39,7 @@ impl Handler for App {
                 let duration =
                     critical_section::with(|cs| CONFIG.borrow(cs).borrow().pump_duration_secs);
                 info!("Manual watering for {} seconds", duration);
-                let mut pin = critical_section::with(|cs| RELAY_PIN.borrow(cs).borrow_mut().take());
-                if let Some(ref mut p) = pin {
-                    pump::run_pump(p, duration).await;
-                }
-                critical_section::with(|cs| {
-                    *RELAY_PIN.borrow(cs).borrow_mut() = pin;
-                });
+                pump::water_for(duration).await;
                 Response::ok("text/plain", b"Watered")
             }
             _ => Response::not_found(),
