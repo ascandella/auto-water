@@ -16,6 +16,7 @@ use esp_hal::clock::CpuClock;
 use esp_hal::gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull};
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
+use esp_println as _;
 use esp_radio::wifi::{Config, WifiController, sta::StationConfig};
 
 use auto_water::handler::App;
