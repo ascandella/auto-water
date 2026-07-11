@@ -16,6 +16,19 @@ env:
   WIFI_PASSWORD: placeholder
 
 jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Enable caching
+        uses: Swatinem/rust-cache@v2
+      - name: Run tests
+        run: RUSTUP_TOOLCHAIN=stable cargo test -p auto-water-core --target x86_64-unknown-linux-gnu
+
   rust-checks:
     name: Rust Checks
     runs-on: ubuntu-latest

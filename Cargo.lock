@@ -30,6 +30,7 @@ checksum = "c583acf993cf4245c4acb0a2cc2ab1f9cc097de73411bb6d3647ff6af2b1013d"
 name = "auto-water"
 version = "0.1.0"
 dependencies = [
+ "auto-water-core",
  "critical-section",
  "defmt 1.1.1",
  "embassy-executor",
@@ -49,6 +50,10 @@ dependencies = [
  "smoltcp",
  "static_cell",
 ]
+
+[[package]]
+name = "auto-water-core"
+version = "0.1.0"
 
 [[package]]
 name = "autocfg"

@@ -103,41 +103,4 @@ impl App {
     }
 }
 
-fn append_bytes(buf: &mut [u8], pos: usize, data: &[u8]) -> usize {
-    buf[pos..pos + data.len()].copy_from_slice(data);
-    pos + data.len()
-}
-
-fn parse_param<'a>(query: &'a str, key: &str) -> Option<&'a str> {
-    query
-        .split('&')
-        .find(|p| p.starts_with(key) && p.as_bytes().get(key.len()) == Some(&b'='))
-        .and_then(|p| p.get(key.len() + 1..))
-}
-
-fn parse_u64(s: &str) -> Result<u64, ()> {
-    let mut n: u64 = 0;
-    for b in s.bytes() {
-        if !b.is_ascii_digit() {
-            return Err(());
-        }
-        n = n.checked_mul(10).ok_or(())? + (b - b'0') as u64;
-    }
-    Ok(n)
-}
-
-fn format_u64(mut n: u64, buf: &mut [u8; 20]) -> usize {
-    if n == 0 {
-        buf[0] = b'0';
-        return 1;
-    }
-    let mut i = buf.len();
-    while n > 0 {
-        i -= 1;
-        buf[i] = b'0' + (n % 10) as u8;
-        n /= 10;
-    }
-    let len = buf.len() - i;
-    buf.copy_within(i.., 0);
-    len
-}
+use auto_water_core::{append_bytes, format_u64, parse_param, parse_u64};

@@ -105,15 +105,4 @@ async fn send_response(socket: &mut TcpSocket<'_>, resp: &Response<'_>) {
     let _ = socket.write_all(resp.body).await;
 }
 
-fn format_u32(mut n: u32, buf: &mut [u8; 10]) -> &[u8] {
-    if n == 0 {
-        return b"0";
-    }
-    let mut i = buf.len();
-    while n > 0 {
-        i -= 1;
-        buf[i] = b'0' + (n % 10) as u8;
-        n /= 10;
-    }
-    &buf[i..]
-}
+use auto_water_core::format_u32;
