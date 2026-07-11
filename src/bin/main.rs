@@ -8,39 +8,43 @@
 #![deny(clippy::large_stack_frames)]
 
 use defmt::info;
+use embassy_executor::Spawner;
+use embassy_net::tcp::TcpSocket;
+use embassy_net::{DhcpConfig, Runner, StackResources};
+use embassy_time::{Duration, Timer};
+use embedded_io_async::Write;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
-use esp_hal::delay::Delay;
-use esp_hal::main;
+use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
-use esp_println as _;
+use esp_println::println;
+use esp_radio::wifi::{Config, WifiController, sta::StationConfig};
 
 extern crate alloc;
 
-// This creates a default app-descriptor required by the esp-idf bootloader.
-// For more information see: <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/app_image_format.html#application-description>
 esp_bootloader_esp_idf::esp_app_desc!();
+
+const SSID: &str = env!("WIFI_SSID");
+const PASSWORD: &str = env!("WIFI_PASSWORD");
+
+macro_rules! mk_static {
+    ($t:ty, $val:expr) => {{
+        static STATIC_CELL: static_cell::StaticCell<$t> = static_cell::StaticCell::new();
+        #[deny(unused_attributes)]
+        let x = STATIC_CELL.uninit().write($val);
+        x
+    }};
+}
 
 #[allow(
     clippy::large_stack_frames,
     reason = "it's not unusual to allocate larger buffers etc. in main"
 )]
-#[main]
-fn main() -> ! {
-    // generator version: 1.3.0
-    // generator parameters: --chip esp32 -o esp32-wroom-32 -o unstable-hal -o alloc -o wifi -o esp-backtrace -o defmt -o ci -o neovim
-
+#[esp_rtos::main]
+async fn main(spawner: Spawner) {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    // The following pins are used to bootstrap the chip. They are available
-    // for use, but check the datasheet of the module for more information on them.
-    // - GPIO0
-    // - GPIO2
-    // - GPIO5
-    // - GPIO12
-    // - GPIO15
-    // These GPIO pins are in use by some feature of the module and should not be used.
     let _ = peripherals.GPIO6;
     let _ = peripherals.GPIO7;
     let _ = peripherals.GPIO8;
@@ -56,15 +60,83 @@ fn main() -> ! {
     let sw_interrupt =
         esp_hal::interrupt::software::SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
     esp_rtos::start(timg0.timer0, sw_interrupt.software_interrupt0);
-    let (mut _wifi_controller, _interfaces) =
-        esp_radio::wifi::new(peripherals.WIFI, Default::default())
-            .expect("Failed to initialize Wi-Fi controller");
 
-    let delay = Delay::new();
-    loop {
-        info!("Hello world!");
-        delay.delay_millis(500);
+    let rng = Rng::new();
+
+    let (wifi_controller, interfaces) = esp_radio::wifi::new(peripherals.WIFI, Default::default())
+        .expect("Failed to initialize Wi-Fi controller");
+
+    let net_seed = rng.random() as u64 | ((rng.random() as u64) << 32);
+    let net_config = embassy_net::Config::dhcpv4(DhcpConfig::default());
+
+    let (stack, runner) = embassy_net::new(
+        interfaces.station,
+        net_config,
+        mk_static!(StackResources<3>, StackResources::<3>::new()),
+        net_seed,
+    );
+
+    spawner.spawn(connection(wifi_controller).unwrap());
+    spawner.spawn(net_task(runner).unwrap());
+
+    println!("Waiting for link up...");
+    stack.wait_config_up().await;
+
+    if let Some(config) = stack.config_v4() {
+        println!("IP: {}", config.address);
     }
 
-    // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/esp-hal-v1.1.0/examples
+    let mut rx_buf = [0u8; 2048];
+    let mut tx_buf = [0u8; 2048];
+
+    loop {
+        let mut socket = TcpSocket::new(stack, &mut rx_buf, &mut tx_buf);
+
+        if socket.accept(80).await.is_err() {
+            continue;
+        }
+
+        info!("New TCP connection");
+
+        let mut req_buf = [0u8; 512];
+        let n = socket.read(&mut req_buf).await.unwrap_or(0);
+        let _ = n;
+
+        let response =
+            b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello from auto-water!\r\n";
+        socket.write_all(response).await.ok();
+        socket.close();
+        Timer::after(Duration::from_millis(100)).await;
+    }
+}
+
+#[embassy_executor::task]
+#[allow(clippy::large_stack_frames)]
+async fn connection(mut controller: WifiController<'static>) {
+    info!("Starting WiFi connection task");
+    loop {
+        if !controller.is_connected() {
+            let client_config = Config::Station(
+                StationConfig::default()
+                    .with_ssid(SSID)
+                    .with_password(PASSWORD.into()),
+            );
+            controller.set_config(&client_config).unwrap();
+            info!("Connecting to WiFi...");
+            match controller.connect_async().await {
+                Ok(_) => info!("WiFi connected!"),
+                Err(e) => {
+                    info!("Failed to connect: {:?}", e);
+                    Timer::after(Duration::from_secs(5)).await;
+                }
+            }
+        } else {
+            Timer::after(Duration::from_secs(10)).await;
+        }
+    }
+}
+
+#[embassy_executor::task]
+async fn net_task(mut runner: Runner<'static, esp_radio::wifi::Interface<'static>>) {
+    runner.run().await;
 }

@@ -13,6 +13,7 @@ esp-hal = { version = "~1.1.0", features = ["defmt", "esp32", "unstable"] }
 
 esp-rtos = { version = "0.3.0", features = [
   "defmt",
+  "embassy",
   "esp-alloc",
   "esp-radio",
   "esp32",
@@ -23,6 +24,7 @@ esp-bootloader-esp-idf = { version = "0.5.0", features = ["defmt", "esp32"] }
 
 critical-section = "1.2.0"
 embedded-io = { version = "0.7.1", features = ["defmt"] }
+embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 esp-alloc = { version = "0.10.0", features = ["defmt"] }
 esp-backtrace = { version = "0.19.0", features = [
   "defmt",
@@ -37,6 +39,18 @@ esp-radio = { version = "0.18.0", features = [
   "unstable",
   "wifi",
 ] }
+
+embassy-executor = { version = "0.10.0", default-features = false }
+embassy-time     = { version = "0.5.1", default-features = false }
+embassy-net      = { version = "0.9.1", features = [
+  "defmt",
+  "tcp",
+  "dhcpv4",
+  "dns",
+  "proto-ipv4",
+  "medium-ip",
+] }
+static_cell = "2.0"
 smoltcp = { version = "0.13.0", default-features = false, features = [
   "defmt",
   "medium-ethernet",
