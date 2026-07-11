@@ -1,0 +1,22 @@
+# KiCad backup files
+*.kicad_sch-bak
+*.kicad_pcb-bak
+*-backups/
+fp-info-cache
+
+# KiCad lock files
+*.lck
+
+# KiCad generated files (regenerate from source)
+*-cache.lib
+*-rescue.lib
+
+# Gerber output (regenerate for fab)
+gerbers/
+
+# Build artifacts (firmware)
+target/
+
+# IDE
+.vscode/
+.idea/

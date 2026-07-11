@@ -1,0 +1,746 @@
+(kicad_sch
+  (version 20230121)
+  (generator "eeschema")
+  (uuid "e63e39d7-6ac0-4ffd-8aa3-1841a4541b55")
+  (paper "A4")
+
+  (title_block
+    (title "Auto Water - ESP32 Relay Driver")
+    (date "2026-07-11")
+    (rev "1.0")
+    (comment 1 "ESP32-WROOM relay driver for automated watering")
+  )
+
+  (lib_symbols
+    (symbol "Transistor_BJT:2N2222A"
+      (pin_names
+        (offset 0) hide)
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "Q"
+        (at 5.08 1.905 0)
+        (effects (font (size 1.27 1.27)) (justify left))
+      )
+      (property "Value" "2N2222A"
+        (at 5.08 0 0)
+        (effects (font (size 1.27 1.27)) (justify left))
+      )
+      (symbol "2N2222A_0_1"
+        (polyline
+          (pts (xy 0.635 0.635) (xy 2.54 2.54))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 0.635 -0.635) (xy 2.54 -2.54))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 0.635 1.905) (xy 0.635 -1.905))
+          (stroke (width 0.508) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 1.27 -1.27) (xy 1.778 -0.762) (xy 0.762 -1.016) (xy 1.27 -1.27))
+          (stroke (width 0) (type default))
+          (fill (type outline))
+        )
+        (circle
+          (center 1.27 0)
+          (radius 2.8194)
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "2N2222A_1_1"
+        (pin passive line
+          (at 2.54 -5.08 90)
+          (length 2.54)
+          (name "E" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin input line
+          (at -2.54 0 0)
+          (length 5.08)
+          (name "B" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 2.54 5.08 270)
+          (length 2.54)
+          (name "C" (effects (font (size 1.27 1.27))))
+          (number "3" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+
+    (symbol "Device:R"
+      (pin_names
+        (offset 0))
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "R"
+        (at 2.032 0 90)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Value" "R"
+        (at 0 0 90)
+        (effects (font (size 1.27 1.27)))
+      )
+      (symbol "R_0_1"
+        (rectangle
+          (start -1.016 -2.54)
+          (end 1.016 2.54)
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "R_1_1"
+        (pin passive line
+          (at 0 3.81 270)
+          (length 1.27)
+          (name "~" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 0 -3.81 90)
+          (length 1.27)
+          (name "~" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+
+    (symbol "Device:D"
+      (pin_names
+        (offset 1.016) hide)
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "D"
+        (at 0 2.54 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Value" "D"
+        (at 0 -2.54 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (symbol "D_0_1"
+        (polyline
+          (pts (xy -1.27 1.27) (xy -1.27 -1.27))
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 1.27 0) (xy -1.27 0))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 1.27 1.27) (xy 1.27 -1.27) (xy -1.27 0) (xy 1.27 1.27))
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "D_1_1"
+        (pin passive line
+          (at -3.81 0 0)
+          (length 2.54)
+          (name "K" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 3.81 0 180)
+          (length 2.54)
+          (name "A" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+
+    (symbol "Relay:SANYOU_SRD_Form_C"
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "K"
+        (at -5.08 8.89 0)
+        (effects (font (size 1.27 1.27)) (justify left))
+      )
+      (property "Value" "SANYOU_SRD_Form_C"
+        (at 5.08 8.89 0)
+        (effects (font (size 1.27 1.27)) (justify left))
+      )
+      (symbol "SANYOU_SRD_Form_C_0_0"
+        (rectangle
+          (start -5.08 6.35)
+          (end 5.08 -6.35)
+          (stroke (width 0.254) (type default))
+          (fill (type background))
+        )
+      )
+      (symbol "SANYOU_SRD_Form_C_0_1"
+        (rectangle
+          (start -3.81 -1.905)
+          (end 0 -4.445)
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy -3.81 -0.635) (xy -3.81 -1.905))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 0 -0.635) (xy 0 -1.905))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 0 -4.445) (xy 0 -6.35))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy -3.81 -4.445) (xy -3.81 -6.35))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 2.54 -6.35) (xy 2.54 -3.175))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 2.54 3.175) (xy 2.54 6.35))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy -1.905 -0.635) (xy -1.905 1.27))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 2.54 -3.175) (xy 3.81 1.27))
+          (stroke (width 0.508) (type default))
+          (fill (type none))
+        )
+        (circle
+          (center 2.54 3.175)
+          (radius 0.254)
+          (stroke (width 0) (type default))
+          (fill (type outline))
+        )
+      )
+      (symbol "SANYOU_SRD_Form_C_1_1"
+        (pin passive line
+          (at 0 -8.89 90)
+          (length 2.54)
+          (name "COIL+" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at -3.81 -8.89 90)
+          (length 2.54)
+          (name "COIL-" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 2.54 8.89 270)
+          (length 2.54)
+          (name "NC" (effects (font (size 1.27 1.27))))
+          (number "3" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 2.54 -8.89 90)
+          (length 2.54)
+          (name "COM" (effects (font (size 1.27 1.27))))
+          (number "4" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 5.08 8.89 270)
+          (length 2.54)
+          (name "NO" (effects (font (size 1.27 1.27))))
+          (number "5" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+
+    (symbol "Connector:Conn_01x02_Pin"
+      (pin_names
+        (offset 1.016) hide)
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "J"
+        (at 0 2.54 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (property "Value" "Conn_01x02_Pin"
+        (at 0 -5.08 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (symbol "Conn_01x02_Pin_1_1"
+        (polyline
+          (pts (xy 1.27 0) (xy 0.508 0))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 1.27 -2.54) (xy 0.508 -2.54))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (rectangle
+          (start -0.508 0.254)
+          (end 0.508 -0.254)
+          (stroke (width 0) (type default))
+          (fill (type outline))
+        )
+        (rectangle
+          (start -0.508 -2.286)
+          (end 0.508 -2.794)
+          (stroke (width 0) (type default))
+          (fill (type outline))
+        )
+        (pin passive line
+          (at 3.81 0 180)
+          (length 2.54)
+          (name "Pin_1" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line
+          (at 3.81 -2.54 180)
+          (length 2.54)
+          (name "Pin_2" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+
+    (symbol "power:+5V"
+      (power)
+      (pin_names (offset 0))
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "#PWR"
+        (at 0 -3.81 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "Value" "+5V"
+        (at 0 3.556 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (symbol "+5V_0_1"
+        (polyline
+          (pts (xy -0.762 1.27) (xy 0 2.54))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 0 0) (xy 0 2.54))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts (xy 0 2.54) (xy 0.762 1.27))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "+5V_1_1"
+        (pin power_in line
+          (at 0 0 90)
+          (length 0)
+          (name "+5V" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+
+    (symbol "power:GND"
+      (power)
+      (pin_names (offset 0))
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (property "Reference" "#PWR"
+        (at 0 -6.35 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (property "Value" "GND"
+        (at 0 -3.81 0)
+        (effects (font (size 1.27 1.27)))
+      )
+      (symbol "GND_0_1"
+        (polyline
+          (pts (xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27))
+          (stroke (width 0) (type default))
+          (fill (type none))
+        )
+      )
+      (symbol "GND_1_1"
+        (pin power_in line
+          (at 0 0 270)
+          (length 0)
+          (name "GND" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+  )
+
+  ;; ============================================================
+  ;; SCHEMATIC SYMBOLS (placed on sheet)
+  ;; ============================================================
+
+  ;; --- Power symbols ---
+  (symbol
+    (lib_id "power:+5V")
+    (at 139.7 50.8 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0001-0001-0001-000000000001")
+    (property "Reference" "#PWR01"
+      (at 139.7 54.61 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+5V"
+      (at 139.7 47.244 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (pin "1"
+      (uuid "pin-5v-1")
+    )
+  )
+
+  (symbol
+    (lib_id "power:GND")
+    (at 139.7 119.38 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0001-0001-0001-000000000002")
+    (property "Reference" "#PWR02"
+      (at 139.7 125.73 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND"
+      (at 139.7 123.19 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (pin "1"
+      (uuid "pin-gnd-1")
+    )
+  )
+
+  ;; --- R1: 1kΩ base resistor ---
+  (symbol
+    (lib_id "Device:R")
+    (at 119.38 88.9 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0002-0002-0002-000000000001")
+    (property "Reference" "R1"
+      (at 121.412 88.9 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "1k"
+      (at 119.38 88.9 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (pin "1"
+      (uuid "pin-r1-1")
+    )
+    (pin "2"
+      (uuid "pin-r1-2")
+    )
+  )
+
+  ;; --- Q1: 2N2222A NPN transistor ---
+  (symbol
+    (lib_id "Transistor_BJT:2N2222A")
+    (at 137.16 88.9 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0003-0003-0003-000000000001")
+    (property "Reference" "Q1"
+      (at 142.24 87.63 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "2N2222A"
+      (at 142.24 90.17 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (pin "1"
+      (uuid "pin-q1-e")
+    )
+    (pin "2"
+      (uuid "pin-q1-b")
+    )
+    (pin "3"
+      (uuid "pin-q1-c")
+    )
+  )
+
+  ;; --- D1: 1N4007 flyback diode ---
+  (symbol
+    (lib_id "Device:D")
+    (at 149.86 69.85 270)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0004-0004-0004-000000000001")
+    (property "Reference" "D1"
+      (at 153.67 69.85 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "1N4007"
+      (at 157.48 69.85 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (pin "1"
+      (uuid "pin-d1-k")
+    )
+    (pin "2"
+      (uuid "pin-d1-a")
+    )
+  )
+
+  ;; --- K1: 5V Relay (SRD-05VDC-SL-C or similar) ---
+  (symbol
+    (lib_id "Relay:SANYOU_SRD_Form_C")
+    (at 139.7 69.85 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0005-0005-0005-000000000001")
+    (property "Reference" "K1"
+      (at 134.62 60.96 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "SRD-05VDC-SL-C"
+      (at 144.78 60.96 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (pin "1"
+      (uuid "pin-k1-coilp")
+    )
+    (pin "2"
+      (uuid "pin-k1-coiln")
+    )
+    (pin "3"
+      (uuid "pin-k1-nc")
+    )
+    (pin "4"
+      (uuid "pin-k1-com")
+    )
+    (pin "5"
+      (uuid "pin-k1-no")
+    )
+  )
+
+  ;; --- J1: ESP32 GPIO input connector (from GPIO4) ---
+  (symbol
+    (lib_id "Connector:Conn_01x02_Pin")
+    (at 101.6 86.36 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0006-0006-0006-000000000001")
+    (property "Reference" "J1"
+      (at 101.6 81.28 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "ESP32_GPIO4"
+      (at 101.6 93.98 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (pin "1"
+      (uuid "pin-j1-1")
+    )
+    (pin "2"
+      (uuid "pin-j1-2")
+    )
+  )
+
+  ;; --- J2: Load output connector (COM + NO) ---
+  (symbol
+    (lib_id "Connector:Conn_01x02_Pin")
+    (at 160.02 55.88 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (uuid "a1b2c3d4-0007-0007-0007-000000000001")
+    (property "Reference" "J2"
+      (at 160.02 50.8 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "LOAD"
+      (at 160.02 63.5 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (pin "1"
+      (uuid "pin-j2-1")
+    )
+    (pin "2"
+      (uuid "pin-j2-2")
+    )
+  )
+
+  ;; ============================================================
+  ;; WIRES (connections)
+  ;; ============================================================
+
+  ;; +5V to relay COIL+ (pin 1)
+  (wire
+    (pts (xy 139.7 50.8) (xy 139.7 60.96))
+    (stroke (width 0) (type default))
+    (uuid "wire-5v-to-coil")
+  )
+
+  ;; +5V to flyback diode cathode
+  (wire
+    (pts (xy 139.7 55.88) (xy 149.86 55.88))
+    (stroke (width 0) (type default))
+    (uuid "wire-5v-to-diode-k-h")
+  )
+  (wire
+    (pts (xy 149.86 55.88) (xy 149.86 66.04))
+    (stroke (width 0) (type default))
+    (uuid "wire-5v-to-diode-k-v")
+  )
+
+  ;; Relay COIL- (pin 2) to transistor collector
+  (wire
+    (pts (xy 135.89 78.74) (xy 139.7 78.74))
+    (stroke (width 0) (type default))
+    (uuid "wire-coiln-to-collector-h")
+  )
+  (wire
+    (pts (xy 139.7 78.74) (xy 139.7 83.82))
+    (stroke (width 0) (type default))
+    (uuid "wire-coiln-to-collector-v")
+  )
+
+  ;; Flyback diode anode to transistor collector node
+  (wire
+    (pts (xy 149.86 73.66) (xy 149.86 78.74))
+    (stroke (width 0) (type default))
+    (uuid "wire-diode-a-to-collector-v")
+  )
+  (wire
+    (pts (xy 139.7 78.74) (xy 149.86 78.74))
+    (stroke (width 0) (type default))
+    (uuid "wire-diode-a-to-collector-h")
+  )
+
+  ;; Transistor emitter to GND
+  (wire
+    (pts (xy 139.7 93.98) (xy 139.7 119.38))
+    (stroke (width 0) (type default))
+    (uuid "wire-emitter-to-gnd")
+  )
+
+  ;; R1 pin 2 to transistor base
+  (wire
+    (pts (xy 119.38 92.71) (xy 119.38 88.9))
+    (stroke (width 0) (type default))
+    (uuid "wire-r1-to-base-v")
+  )
+  (wire
+    (pts (xy 119.38 88.9) (xy 134.62 88.9))
+    (stroke (width 0) (type default))
+    (uuid "wire-r1-to-base-h")
+  )
+
+  ;; J1 pin 1 (GPIO4) to R1 pin 1
+  (wire
+    (pts (xy 105.41 86.36) (xy 119.38 86.36))
+    (stroke (width 0) (type default))
+    (uuid "wire-gpio-to-r1-h")
+  )
+  (wire
+    (pts (xy 119.38 86.36) (xy 119.38 85.09))
+    (stroke (width 0) (type default))
+    (uuid "wire-gpio-to-r1-v")
+  )
+
+  ;; J1 pin 2 (GND) to main GND
+  (wire
+    (pts (xy 105.41 88.9) (xy 109.22 88.9))
+    (stroke (width 0) (type default))
+    (uuid "wire-j1-gnd-h")
+  )
+  (wire
+    (pts (xy 109.22 88.9) (xy 109.22 119.38))
+    (stroke (width 0) (type default))
+    (uuid "wire-j1-gnd-v")
+  )
+  (wire
+    (pts (xy 109.22 119.38) (xy 139.7 119.38))
+    (stroke (width 0) (type default))
+    (uuid "wire-j1-gnd-to-main-gnd")
+  )
+
+  ;; Relay NO (pin 5) to J2 pin 1 (load)
+  (wire
+    (pts (xy 144.78 60.96) (xy 144.78 55.88))
+    (stroke (width 0) (type default))
+    (uuid "wire-no-to-j2-v")
+  )
+  (wire
+    (pts (xy 144.78 55.88) (xy 163.83 55.88))
+    (stroke (width 0) (type default))
+    (uuid "wire-no-to-j2-h")
+  )
+
+  ;; Relay COM (pin 4) to J2 pin 2 (load return)
+  (wire
+    (pts (xy 142.24 78.74) (xy 163.83 78.74))
+    (stroke (width 0) (type default))
+    (uuid "wire-com-to-j2-h")
+  )
+  (wire
+    (pts (xy 163.83 78.74) (xy 163.83 58.42))
+    (stroke (width 0) (type default))
+    (uuid "wire-com-to-j2-v")
+  )
+
+  ;; ============================================================
+  ;; TEXT ANNOTATIONS
+  ;; ============================================================
+
+  (text "ESP32 GPIO4 drives transistor base\nthrough 1kΩ current-limiting resistor"
+    (at 93.98 101.6 0)
+    (effects (font (size 1.27 1.27)))
+    (uuid "text-note-1")
+  )
+
+  (text "Flyback diode D1 protects Q1\nfrom relay coil inductive kick"
+    (at 149.86 86.36 0)
+    (effects (font (size 1.27 1.27)))
+    (uuid "text-note-2")
+  )
+
+  (text "J2: Connect to solenoid valve\nor water pump (load side)"
+    (at 160.02 45.72 0)
+    (effects (font (size 1.27 1.27)))
+    (uuid "text-note-3")
+  )
+)
