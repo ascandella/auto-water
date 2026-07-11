@@ -19,9 +19,10 @@ use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
 use esp_radio::wifi::{Config, WifiController, sta::StationConfig};
 
-use core::cell::RefCell;
-
-use auto_water::server::{Handler, Response, Server};
+use auto_water::handler::App;
+use auto_water::pins::{FLOAT_PIN, RELAY_PIN};
+use auto_water::pump;
+use auto_water::server::Server;
 
 extern crate alloc;
 
@@ -30,12 +31,6 @@ esp_bootloader_esp_idf::esp_app_desc!();
 const SSID: &str = env!("WIFI_SSID");
 const PASSWORD: &str = env!("WIFI_PASSWORD");
 
-static RELAY_PIN: critical_section::Mutex<RefCell<Option<Output<'static>>>> =
-    critical_section::Mutex::new(RefCell::new(None));
-
-static FLOAT_PIN: critical_section::Mutex<RefCell<Option<Input<'static>>>> =
-    critical_section::Mutex::new(RefCell::new(None));
-
 macro_rules! mk_static {
     ($t:ty, $val:expr) => {{
         static STATIC_CELL: static_cell::StaticCell<$t> = static_cell::StaticCell::new();
@@ -43,47 +38,6 @@ macro_rules! mk_static {
         let x = STATIC_CELL.uninit().write($val);
         x
     }};
-}
-
-struct App;
-
-impl Handler for App {
-    async fn handle(&self, _method: &str, path: &str) -> Response<'static> {
-        match path {
-            "/" => Response::ok("text/plain", b"Hello from auto-water!"),
-            "/status" => Response::ok("text/plain", b"OK"),
-            "/float" => {
-                let level = critical_section::with(|cs| {
-                    FLOAT_PIN
-                        .borrow(cs)
-                        .borrow()
-                        .as_ref()
-                        .map(|pin| pin.is_high())
-                });
-                match level {
-                    Some(true) => Response::ok("text/plain", b"high"),
-                    Some(false) => Response::ok("text/plain", b"low"),
-                    None => Response::ok("text/plain", b"unknown"),
-                }
-            }
-            "/water" => {
-                info!("Watering triggered");
-                critical_section::with(|cs| {
-                    if let Some(ref mut pin) = RELAY_PIN.borrow(cs).borrow_mut().as_mut() {
-                        pin.set_high();
-                    }
-                });
-                Timer::after(Duration::from_secs(1)).await;
-                critical_section::with(|cs| {
-                    if let Some(ref mut pin) = RELAY_PIN.borrow(cs).borrow_mut().as_mut() {
-                        pin.set_low();
-                    }
-                });
-                Response::ok("text/plain", b"Watered for 1 second")
-            }
-            _ => Response::not_found(),
-        }
-    }
 }
 
 #[allow(
@@ -104,17 +58,18 @@ async fn main(spawner: Spawner) {
     let _ = peripherals.GPIO16;
     let _ = peripherals.GPIO20;
 
-    let relay_pin = Output::new(peripherals.GPIO26, Level::Low, OutputConfig::default());
     critical_section::with(|cs| {
-        RELAY_PIN.borrow(cs).replace(Some(relay_pin));
+        RELAY_PIN.borrow(cs).replace(Some(Output::new(
+            peripherals.GPIO26,
+            Level::Low,
+            OutputConfig::default(),
+        )));
     });
-
-    let float_pin = Input::new(
-        peripherals.GPIO13,
-        InputConfig::default().with_pull(Pull::Up),
-    );
     critical_section::with(|cs| {
-        FLOAT_PIN.borrow(cs).replace(Some(float_pin));
+        FLOAT_PIN.borrow(cs).replace(Some(Input::new(
+            peripherals.GPIO13,
+            InputConfig::default().with_pull(Pull::Up),
+        )));
     });
 
     esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 98768);
@@ -141,6 +96,7 @@ async fn main(spawner: Spawner) {
 
     spawner.spawn(connection(wifi_controller).unwrap());
     spawner.spawn(net_task(runner).unwrap());
+    spawner.spawn(watering_task().unwrap());
 
     println!("Waiting for link up...");
     stack.wait_config_up().await;
@@ -151,6 +107,13 @@ async fn main(spawner: Spawner) {
 
     let server = Server::new(App);
     server.run(stack).await;
+}
+
+#[embassy_executor::task]
+async fn watering_task() {
+    let float_pin = critical_section::with(|cs| FLOAT_PIN.borrow(cs).take().unwrap());
+    let mut relay_pin = critical_section::with(|cs| RELAY_PIN.borrow(cs).take().unwrap());
+    pump::watering_loop(&float_pin, &mut relay_pin).await;
 }
 
 #[embassy_executor::task]
