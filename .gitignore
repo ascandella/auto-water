@@ -20,3 +20,10 @@ target/
 # IDE
 .vscode/
 .idea/
+
+
+# Added by cargo
+
+/target
+/.history
+auto-water/.gitignore
