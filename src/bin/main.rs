@@ -115,7 +115,11 @@ async fn connection(mut controller: WifiController<'static>) {
                     .with_ssid(SSID)
                     .with_password(PASSWORD.into()),
             );
-            controller.set_config(&client_config).unwrap();
+            if let Err(e) = controller.set_config(&client_config) {
+                info!("Failed to set WiFi config: {:?}", e);
+                Timer::after(Duration::from_secs(5)).await;
+                continue;
+            }
             info!("Connecting to WiFi...");
             match controller.connect_async().await {
                 Ok(_) => info!("WiFi connected!"),
