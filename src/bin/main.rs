@@ -9,16 +9,16 @@
 
 use defmt::info;
 use embassy_executor::Spawner;
-use embassy_net::tcp::TcpSocket;
 use embassy_net::{DhcpConfig, Runner, StackResources};
 use embassy_time::{Duration, Timer};
-use embedded_io_async::Write;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
 use esp_radio::wifi::{Config, WifiController, sta::StationConfig};
+
+use auto_water::server::{Handler, Response, Server};
 
 extern crate alloc;
 
@@ -34,6 +34,18 @@ macro_rules! mk_static {
         let x = STATIC_CELL.uninit().write($val);
         x
     }};
+}
+
+struct App;
+
+impl Handler for App {
+    fn handle(&self, _method: &str, path: &str) -> Response<'static> {
+        match path {
+            "/" => Response::ok("text/plain", b"Hello from auto-water!"),
+            "/status" => Response::ok("text/plain", b"OK"),
+            _ => Response::not_found(),
+        }
+    }
 }
 
 #[allow(
@@ -86,28 +98,8 @@ async fn main(spawner: Spawner) {
         println!("IP: {}", config.address);
     }
 
-    let mut rx_buf = [0u8; 2048];
-    let mut tx_buf = [0u8; 2048];
-
-    loop {
-        let mut socket = TcpSocket::new(stack, &mut rx_buf, &mut tx_buf);
-
-        if socket.accept(80).await.is_err() {
-            continue;
-        }
-
-        info!("New TCP connection");
-
-        let mut req_buf = [0u8; 512];
-        let n = socket.read(&mut req_buf).await.unwrap_or(0);
-        let _ = n;
-
-        let response =
-            b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello from auto-water!\r\n";
-        socket.write_all(response).await.ok();
-        socket.close();
-        Timer::after(Duration::from_millis(100)).await;
-    }
+    let server = Server::new(App);
+    server.run(stack).await;
 }
 
 #[embassy_executor::task]
