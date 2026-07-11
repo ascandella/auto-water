@@ -19,12 +19,11 @@ Rust firmware using `esp-idf-svc` (std). Hosts a web server on the local network
 ### Firmware
 ```bash
 # Install toolchain
-cargo install espup ldproxy
+cargo install espup
 espup install
 source ~/export-esp.sh
 
 # Build and flash
-cd firmware/
 cargo run
 ```
 

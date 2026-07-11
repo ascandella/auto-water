@@ -10,8 +10,8 @@
 use defmt::info;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
-use esp_hal::main;
 use esp_hal::delay::Delay;
+use esp_hal::main;
 use esp_hal::timer::timg::TimerGroup;
 use esp_println as _;
 
