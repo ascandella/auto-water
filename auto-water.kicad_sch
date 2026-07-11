@@ -1133,7 +1133,7 @@
 		)
 		(uuid "66c1d311-2f6a-418e-856c-c4bcd60ed68a")
 	)
-	(text "ESP32 GPIO4 drives transistor base\nthrough 1kΩ current-limiting resistor"
+  (text "ESP32 GPIO26 drives transistor base\nthrough 1kΩ current-limiting resistor"
 		(exclude_from_sim no)
 		(at 93.98 101.6 0)
 		(effects
@@ -1802,7 +1802,7 @@
 				)
 			)
 		)
-		(property "Value" "ESP32_GPIO4"
+		(property "Value" "ESP32_GPIO26"
 			(at 101.6 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)

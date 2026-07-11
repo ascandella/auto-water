@@ -1,10 +1,10 @@
 # Auto Water
 
-Automated plant watering system: ESP32-WROOM + relay + solenoid valve, controlled via a web interface.
+Automated plant watering system: ESP32-WROOM + SSR + solenoid valve, controlled via a web interface.
 
 ## Hardware
 
-ESP32 drives a 5V relay through an NPN transistor (2N2222A), switching a solenoid valve or water pump. Schematic in KiCad format.
+ESP32 drives a solid state relay through an NPN transistor (2N2222A), switching a solenoid valve or water pump. Schematic in KiCad format.
 
 ## Software
 
@@ -14,7 +14,7 @@ Rust firmware using `esp-idf-svc` (std). Hosts a web server on the local network
 
 ### Hardware
 1. Open `auto-water.kicad_sch` in [KiCad](https://www.kicad.org/) to view/edit the schematic
-2. Wire per the schematic: GPIO4 → 1kΩ → 2N2222A base, 5V → relay coil, flyback diode across coil
+2. Wire per the schematic: GPIO26 → 1kΩ → 2N2222A base, 5V → SSR input
 
 ### Firmware
 ```bash

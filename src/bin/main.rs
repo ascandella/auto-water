@@ -13,10 +13,13 @@ use embassy_net::{DhcpConfig, Runner, StackResources};
 use embassy_time::{Duration, Timer};
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
+use esp_hal::gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull};
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
 use esp_radio::wifi::{Config, WifiController, sta::StationConfig};
+
+use core::cell::RefCell;
 
 use auto_water::server::{Handler, Response, Server};
 
@@ -26,6 +29,12 @@ esp_bootloader_esp_idf::esp_app_desc!();
 
 const SSID: &str = env!("WIFI_SSID");
 const PASSWORD: &str = env!("WIFI_PASSWORD");
+
+static RELAY_PIN: critical_section::Mutex<RefCell<Option<Output<'static>>>> =
+    critical_section::Mutex::new(RefCell::new(None));
+
+static FLOAT_PIN: critical_section::Mutex<RefCell<Option<Input<'static>>>> =
+    critical_section::Mutex::new(RefCell::new(None));
 
 macro_rules! mk_static {
     ($t:ty, $val:expr) => {{
@@ -39,10 +48,39 @@ macro_rules! mk_static {
 struct App;
 
 impl Handler for App {
-    fn handle(&self, _method: &str, path: &str) -> Response<'static> {
+    async fn handle(&self, _method: &str, path: &str) -> Response<'static> {
         match path {
             "/" => Response::ok("text/plain", b"Hello from auto-water!"),
             "/status" => Response::ok("text/plain", b"OK"),
+            "/float" => {
+                let level = critical_section::with(|cs| {
+                    FLOAT_PIN
+                        .borrow(cs)
+                        .borrow()
+                        .as_ref()
+                        .map(|pin| pin.is_high())
+                });
+                match level {
+                    Some(true) => Response::ok("text/plain", b"high"),
+                    Some(false) => Response::ok("text/plain", b"low"),
+                    None => Response::ok("text/plain", b"unknown"),
+                }
+            }
+            "/water" => {
+                info!("Watering triggered");
+                critical_section::with(|cs| {
+                    if let Some(ref mut pin) = RELAY_PIN.borrow(cs).borrow_mut().as_mut() {
+                        pin.set_high();
+                    }
+                });
+                Timer::after(Duration::from_secs(1)).await;
+                critical_section::with(|cs| {
+                    if let Some(ref mut pin) = RELAY_PIN.borrow(cs).borrow_mut().as_mut() {
+                        pin.set_low();
+                    }
+                });
+                Response::ok("text/plain", b"Watered for 1 second")
+            }
             _ => Response::not_found(),
         }
     }
@@ -65,6 +103,19 @@ async fn main(spawner: Spawner) {
     let _ = peripherals.GPIO11;
     let _ = peripherals.GPIO16;
     let _ = peripherals.GPIO20;
+
+    let relay_pin = Output::new(peripherals.GPIO26, Level::Low, OutputConfig::default());
+    critical_section::with(|cs| {
+        RELAY_PIN.borrow(cs).replace(Some(relay_pin));
+    });
+
+    let float_pin = Input::new(
+        peripherals.GPIO13,
+        InputConfig::default().with_pull(Pull::Up),
+    );
+    critical_section::with(|cs| {
+        FLOAT_PIN.borrow(cs).replace(Some(float_pin));
+    });
 
     esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 98768);
 

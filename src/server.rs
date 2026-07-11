@@ -32,8 +32,9 @@ impl<'a> Response<'a> {
     }
 }
 
+#[allow(async_fn_in_trait)]
 pub trait Handler {
-    fn handle(&self, method: &str, path: &str) -> Response<'static>;
+    async fn handle(&self, method: &str, path: &str) -> Response<'static>;
 }
 
 pub struct Server<H: Handler> {
@@ -79,7 +80,7 @@ async fn handle_connection<H: Handler>(handler: &H, socket: &mut TcpSocket<'_>) 
             let path = req.path.unwrap_or("/");
             info!("HTTP {} {}", method, path);
 
-            let resp = handler.handle(method, path);
+            let resp = handler.handle(method, path).await;
             send_response(socket, &resp).await;
         }
         _ => {

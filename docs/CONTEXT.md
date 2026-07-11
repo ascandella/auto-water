@@ -2,7 +2,7 @@
 
 ## Overview
 
-Automated plant watering system using an ESP32-WROOM microcontroller to control a solenoid valve (or water pump) via a 5V relay, with a web interface for manual control.
+Automated plant watering system using an ESP32-WROOM microcontroller to control a solenoid valve (or water pump) via a solid state relay, with a web interface for manual control.
 
 ## Hardware Design
 
@@ -11,33 +11,31 @@ Automated plant watering system using an ESP32-WROOM microcontroller to control 
 | Component | Part | Purpose |
 |-----------|------|---------|
 | MCU | ESP32-WROOM (WiFi dev board) | Controller + web server |
-| Relay | 5V DC coil, 0.36W (72mA), 5-pin SPDT | Switches water valve/pump |
-| Transistor | 2N2222A (NPN) | Drives relay coil (GPIO can't source 72mA) |
+| Relay | 5V SSR (solid state relay) | Switches water valve/pump |
+| Transistor | 2N2222A (NPN) | Drives SSR input (may not be needed depending on SSR input specs) |
 | Resistor | 1kΩ | Limits base current from GPIO (~2mA) |
-| Diode | 1N4007 | Flyback protection across relay coil |
-| Connector J1 | 2-pin | ESP32 GPIO4 + GND input |
+| Connector J1 | 2-pin | ESP32 GPIO26 + GND input |
 | Connector J2 | 2-pin | Load output (solenoid valve / pump) |
 
 ### Circuit Topology
 
 ```
-ESP32 GPIO4 → [1kΩ] → Base (2N2222A)
+ESP32 GPIO26 → [1kΩ] → Base (2N2222A)
                         Emitter → GND
-                        Collector → Relay COIL-
+                        Collector → SSR input (-)
 
-ESP32 5V pin → Relay COIL+
-               Flyback diode (1N4007) across coil (cathode to 5V, anode to collector)
+ESP32 5V pin → SSR input (+)
 
-Relay NO → Load terminal 1 (J2 pin 1)
-Relay COM → Load terminal 2 (J2 pin 2)
+SSR output → Load terminal 1 (J2 pin 1)
+SSR load return → Load terminal 2 (J2 pin 2)
 ```
 
 ### Power
 
 - ESP32 dev board powered via USB (5V)
-- 5V rail from USB/VIN pin powers the relay coil
+- 5V rail from USB/VIN pin powers SSR input
 - 3.3V GPIO drives transistor base through 1kΩ (draws ~2mA from GPIO, well within limits)
-- Total relay coil draw: 72mA from 5V rail — within USB budget
+- SSR switches load side independently (no coil current draw)
 
 ### KiCad Files
 
@@ -58,7 +56,7 @@ Relay COM → Load terminal 2 (J2 pin 2)
 
 - ESP32 connects to WiFi on boot
 - Runs an HTTP server (`EspHttpServer` from `esp-idf-svc`)
-- Web UI exposes on/off control for the relay (GPIO4)
+- Web UI exposes on/off control for the relay (GPIO26)
 - Future: scheduling, soil moisture sensor input, multiple zones
 
 ### Key Crates
@@ -75,24 +73,26 @@ Relay COM → Load terminal 2 (J2 pin 2)
 | Method | Path | Action |
 |--------|------|--------|
 | GET | `/` | Status page with ON/OFF buttons |
-| GET | `/on` | Set GPIO4 HIGH → relay activates → valve opens |
-| GET | `/off` | Set GPIO4 LOW → relay deactivates → valve closes |
+| GET | `/on` | Set GPIO26 HIGH → relay activates → valve opens |
+| GET | `/off` | Set GPIO26 LOW → relay deactivates → valve closes |
 
 ### GPIO Pin Assignment
 
 | GPIO | Function |
 |------|----------|
-| GPIO4 | Relay control (output, drives transistor base via 1kΩ) |
+| GPIO26 | Relay control (output, drives transistor base via 1kΩ) |
+| GPIO13 | Float sensor (digital input) |
+| GPIO32 | Moisture sensor (ADC1 analog input) |
 
 ## Design Decisions
 
 1. **`esp-idf-svc` (std) over `esp-hal` (no_std):** Chose std approach because WiFi support is mature and we get threads, `String`, `Vec`, etc. FreeRTOS runs underneath.
 
-2. **Transistor driver over direct GPIO:** GPIO4 outputs 3.3V at ~12mA max. Relay coil needs 5V at 72mA. NPN transistor acts as a level-shifting current amplifier.
+2. **Transistor driver over direct GPIO:** GPIO26 outputs 3.3V at ~12mA max. NPN transistor acts as a level-shifting current amplifier to drive the SSR input. Depending on the SSR's input specs, the transistor may not be necessary — many SSRs can be driven directly from 3.3V GPIO.
 
 3. **KiCad for schematic/PCB:** Open-source, text-based S-expression format, git-friendly.
 
-4. **Relay over MOSFET direct drive:** Using a mechanical relay to switch the load (solenoid valve). Provides galvanic isolation between control and load circuits. Load could be 12V/24V DC or even mains AC valve.
+4. **SSR over mechanical relay:** Using a solid state relay to switch the load (solenoid valve). No moving parts, no inductive kickback (no flyback diode needed), silent switching, faster response time. Provides galvanic isolation between control and load circuits. Load could be 12V/24V DC or even mains AC valve.
 
 ## TODO
 
