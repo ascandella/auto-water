@@ -1,8 +1,14 @@
 use defmt::info;
 use embassy_net::tcp::TcpSocket;
+use embassy_sync::blocking_mutex::raw::NoopRawMutex;
+use embassy_sync::mutex::Mutex;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::Write;
+use esp_hal::system::software_reset;
+use esp_storage::FlashStorage;
 use httparse::{EMPTY_HEADER, Request, Status};
+
+use crate::ota;
 
 const MAX_HEADERS: usize = 16;
 const RX_BUF_SIZE: usize = 2048;
@@ -39,11 +45,15 @@ pub trait Handler {
 
 pub struct Server<H: Handler> {
     handler: H,
+    flash: Mutex<NoopRawMutex, FlashStorage<'static>>,
 }
 
 impl<H: Handler> Server<H> {
-    pub const fn new(handler: H) -> Self {
-        Self { handler }
+    pub fn new(handler: H, flash: FlashStorage<'static>) -> Self {
+        Self {
+            handler,
+            flash: Mutex::new(flash),
+        }
     }
 
     pub async fn run(&self, stack: embassy_net::Stack<'static>) {
@@ -57,35 +67,102 @@ impl<H: Handler> Server<H> {
                 continue;
             }
 
-            handle_connection(&self.handler, &mut socket).await;
+            self.handle_connection(&mut socket).await;
             socket.close();
             Timer::after(Duration::from_millis(100)).await;
         }
     }
-}
 
-async fn handle_connection<H: Handler>(handler: &H, socket: &mut TcpSocket<'_>) {
-    let mut req_buf = [0u8; 512];
-    let n = match socket.read(&mut req_buf).await {
-        Ok(n) => n,
-        Err(_) => return,
-    };
+    async fn handle_connection(&self, socket: &mut TcpSocket<'_>) {
+        let mut req_buf = [0u8; 512];
+        let n = match socket.read(&mut req_buf).await {
+            Ok(n) => n,
+            Err(_) => return,
+        };
 
-    let mut headers = [EMPTY_HEADER; MAX_HEADERS];
-    let mut req = Request::new(&mut headers);
+        let mut headers = [EMPTY_HEADER; MAX_HEADERS];
+        let mut req = Request::new(&mut headers);
 
-    match req.parse(&req_buf[..n as usize]) {
-        Ok(Status::Complete(_)) => {
-            let method = req.method.unwrap_or("GET");
-            let path = req.path.unwrap_or("/");
-            info!("HTTP {} {}", method, path);
+        match req.parse(&req_buf[..n as usize]) {
+            Ok(Status::Complete(header_len)) => {
+                let method = req.method.unwrap_or("GET");
+                let path = req.path.unwrap_or("/");
+                info!("HTTP {} {}", method, path);
 
-            let resp = handler.handle(method, path).await;
-            send_response(socket, &resp).await;
+                if method == "POST" && path == "/ota" {
+                    let auth_header = req
+                        .headers
+                        .iter()
+                        .find(|h| h.name.eq_ignore_ascii_case("Authorization"))
+                        .map(|h| h.value);
+
+                    let content_length = req
+                        .headers
+                        .iter()
+                        .find(|h| h.name.eq_ignore_ascii_case("Content-Length"))
+                        .and_then(|h| core::str::from_utf8(h.value).ok())
+                        .and_then(|s| s.parse::<usize>().ok());
+
+                    let initial_body = &req_buf[header_len..n as usize];
+                    self.handle_ota(socket, auth_header, content_length, initial_body)
+                        .await;
+                } else {
+                    let resp = self.handler.handle(method, path).await;
+                    send_response(socket, &resp).await;
+                }
+            }
+            _ => {
+                info!("Failed to parse HTTP request");
+                let _ = socket.write_all(b"HTTP/1.1 400 Bad Request\r\n\r\n").await;
+            }
         }
-        _ => {
-            info!("Failed to parse HTTP request");
-            let _ = socket.write_all(b"HTTP/1.1 400 Bad Request\r\n\r\n").await;
+    }
+
+    async fn handle_ota(
+        &self,
+        socket: &mut TcpSocket<'_>,
+        auth_header: Option<&[u8]>,
+        content_length: Option<usize>,
+        initial_body: &[u8],
+    ) {
+        if !ota::check_auth(auth_header) {
+            info!("OTA: auth failed");
+            let _ = socket
+                .write_all(b"HTTP/1.1 401 Unauthorized\r\nContent-Type: text/plain\r\nContent-Length: 16\r\n\r\nInvalid password")
+                .await;
+            return;
+        }
+
+        let content_length = match content_length {
+            Some(len) if len > 0 => len,
+            _ => {
+                info!("OTA: missing or invalid Content-Length");
+                let _ = socket
+                    .write_all(b"HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nMissing Content-Length")
+                    .await;
+                return;
+            }
+        };
+
+        info!("OTA: starting, {} bytes", content_length);
+
+        let mut flash = self.flash.lock().await;
+        match ota::perform_ota(&mut flash, socket, content_length, initial_body).await {
+            Ok(()) => {
+                info!("OTA: write complete, sending response");
+                let _ = socket
+                    .write_all(
+                        b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 35\r\n\r\nOTA update successful, rebooting...",
+                    )
+                    .await;
+                software_reset();
+            }
+            Err(e) => {
+                defmt::error!("OTA failed: {:?}", e);
+                let _ = socket
+                    .write_all(b"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nOTA failed")
+                    .await;
+            }
         }
     }
 }
