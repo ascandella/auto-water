@@ -42,6 +42,10 @@ impl Handler for App {
                 pump::water_for(duration).await;
                 Response::ok("text/plain", b"Watered")
             }
+            "/ota" => Response::ok(
+                "text/plain",
+                b"POST firmware binary to /ota with Authorization: Bearer header",
+            ),
             _ => Response::not_found(),
         }
     }

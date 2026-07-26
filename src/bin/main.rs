@@ -91,7 +91,7 @@ async fn main(spawner: Spawner) {
         info!("IP: {}", config.address);
     }
 
-    let server = Server::new(App);
+    let server = Server::new(App, esp_storage::FlashStorage::new(peripherals.FLASH));
     server.run(stack).await;
 }
 
