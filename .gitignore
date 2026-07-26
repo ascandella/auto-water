@@ -28,3 +28,4 @@ target/
 /.history
 auto-water/.gitignore
 .envrc
+/*.bin

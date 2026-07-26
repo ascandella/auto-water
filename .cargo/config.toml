@@ -1,9 +1,6 @@
 [target.xtensa-esp32-none-elf]
 runner = "espflash flash --monitor --chip esp32 --log-format defmt --partition-table partitions.csv"
 
-[alias]
-ota-build = '!cargo build --release && espflash save-image --chip=esp32 target/xtensa-esp32-none-elf/release/auto-water firmware.bin'
-
 [env]
 DEFMT_LOG="info"
 
