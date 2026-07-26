@@ -14,6 +14,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   WIFI_SSID: placeholder
   WIFI_PASSWORD: placeholder
+  OTA_PASSWORD: placeholder
 
 jobs:
   rust-checks:
