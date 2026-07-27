@@ -48,7 +48,6 @@ dependencies = [
  "esp-rtos",
  "esp-storage",
  "httparse",
- "smoltcp",
  "static_cell",
 ]
 

@@ -55,19 +55,6 @@ embassy-net      = { version = "0.9.1", features = [
 ] }
 httparse          = { version = "1.10.1", default-features = false }
 static_cell       = "2.0"
-smoltcp = { version = "0.13.0", default-features = false, features = [
-  "defmt",
-  "medium-ethernet",
-  "multicast",
-  "proto-dhcpv4",
-  "proto-dns",
-  "proto-ipv4",
-  "socket-dns",
-  "socket-icmp",
-  "socket-raw",
-  "socket-tcp",
-  "socket-udp",
-] }
 
 
 # For fine tuning these settings, please refer to https://doc.rust-lang.org/cargo/reference/profiles.html
