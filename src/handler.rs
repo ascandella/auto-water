@@ -1,14 +1,21 @@
+#[cfg(feature = "target-esp")]
 use core::cell::RefCell;
-
+#[cfg(feature = "target-esp")]
 use defmt::info;
 
+#[cfg(feature = "target-esp")]
 use crate::config::{self, CONFIG};
+#[cfg(feature = "target-esp")]
 use crate::pins::FLOAT_PIN;
+#[cfg(feature = "target-esp")]
 use crate::pump;
-use crate::server::{Handler, Response};
+#[cfg(feature = "target-esp")]
+use crate::types::{Handler, Response};
 
+#[cfg(feature = "target-esp")]
 pub struct App;
 
+#[cfg(feature = "target-esp")]
 impl Handler for App {
     async fn handle(&self, _method: &str, path: &str) -> Response<'static> {
         let (path_base, query) = match path.split_once('?') {
@@ -51,9 +58,11 @@ impl Handler for App {
     }
 }
 
+#[cfg(feature = "target-esp")]
 static CONFIG_BUF: critical_section::Mutex<RefCell<[u8; 80]>> =
     critical_section::Mutex::new(RefCell::new([0u8; 80]));
 
+#[cfg(feature = "target-esp")]
 impl App {
     fn handle_config(&self, query: Option<&str>) -> Response<'static> {
         if let Some(q) = query {
@@ -109,11 +118,13 @@ impl App {
     }
 }
 
+#[cfg(any(test, feature = "target-esp"))]
 fn append_bytes(buf: &mut [u8], pos: usize, data: &[u8]) -> usize {
     buf[pos..pos + data.len()].copy_from_slice(data);
     pos + data.len()
 }
 
+#[cfg(any(test, feature = "target-esp"))]
 fn parse_param<'a>(query: &'a str, key: &str) -> Option<&'a str> {
     query
         .split('&')
@@ -121,7 +132,11 @@ fn parse_param<'a>(query: &'a str, key: &str) -> Option<&'a str> {
         .and_then(|p| p.get(key.len() + 1..))
 }
 
+#[cfg(any(test, feature = "target-esp"))]
 fn parse_u64(s: &str) -> Result<u64, ()> {
+    if s.is_empty() {
+        return Err(());
+    }
     let mut n: u64 = 0;
     for b in s.bytes() {
         if !b.is_ascii_digit() {
@@ -132,6 +147,7 @@ fn parse_u64(s: &str) -> Result<u64, ()> {
     Ok(n)
 }
 
+#[cfg(any(test, feature = "target-esp"))]
 fn format_u64(mut n: u64, buf: &mut [u8; 20]) -> usize {
     if n == 0 {
         buf[0] = b'0';
@@ -146,4 +162,88 @@ fn format_u64(mut n: u64, buf: &mut [u8; 20]) -> usize {
     let len = buf.len() - i;
     buf.copy_within(i.., 0);
     len
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_param_basic() {
+        assert_eq!(parse_param("interval=86400", "interval"), Some("86400"));
+        assert_eq!(parse_param("duration=10", "duration"), Some("10"));
+    }
+
+    #[test]
+    fn parse_param_multiple() {
+        assert_eq!(
+            parse_param("interval=86400&duration=10", "interval"),
+            Some("86400")
+        );
+        assert_eq!(
+            parse_param("interval=86400&duration=10", "duration"),
+            Some("10")
+        );
+    }
+
+    #[test]
+    fn parse_param_missing() {
+        assert_eq!(parse_param("foo=bar", "interval"), None);
+        assert_eq!(parse_param("", "interval"), None);
+    }
+
+    #[test]
+    fn parse_param_wrong_key() {
+        assert_eq!(parse_param("foo=bar", "foo="), None);
+        assert_eq!(parse_param("foobar=baz", "foo"), None);
+    }
+
+    #[test]
+    fn parse_u64_valid() {
+        assert_eq!(parse_u64("0"), Ok(0));
+        assert_eq!(parse_u64("5"), Ok(5));
+        assert_eq!(parse_u64("86400"), Ok(86400));
+        assert_eq!(parse_u64("172800"), Ok(172800));
+    }
+
+    #[test]
+    fn parse_u64_invalid() {
+        assert_eq!(parse_u64(""), Err(()));
+        assert_eq!(parse_u64("abc"), Err(()));
+        assert_eq!(parse_u64("12.34"), Err(()));
+        assert_eq!(parse_u64("-1"), Err(()));
+    }
+
+    #[test]
+    fn parse_u64_overflow() {
+        assert_eq!(parse_u64("99999999999999999999"), Err(()));
+    }
+
+    #[test]
+    fn format_u64_values() {
+        let mut buf = [0u8; 20];
+        assert_eq!(format_u64(0, &mut buf), 1);
+        assert_eq!(&buf[..1], b"0");
+
+        assert_eq!(format_u64(5, &mut buf), 1);
+        assert_eq!(&buf[..1], b"5");
+
+        assert_eq!(format_u64(86400, &mut buf), 5);
+        assert_eq!(&buf[..5], b"86400");
+
+        assert_eq!(format_u64(172800, &mut buf), 6);
+        assert_eq!(&buf[..6], b"172800");
+    }
+
+    #[test]
+    fn append_bytes_basic() {
+        let mut buf = [0u8; 20];
+        let pos = append_bytes(&mut buf, 0, b"hello");
+        assert_eq!(pos, 5);
+        assert_eq!(&buf[..5], b"hello");
+
+        let pos = append_bytes(&mut buf, pos, b" world");
+        assert_eq!(pos, 11);
+        assert_eq!(&buf[..11], b"hello world");
+    }
 }
