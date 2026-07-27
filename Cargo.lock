@@ -42,6 +42,7 @@ dependencies = [
  "esp-backtrace",
  "esp-bootloader-esp-idf",
  "esp-hal",
+ "esp-nvs",
  "esp-println",
  "esp-radio",
  "esp-rtos",
@@ -874,6 +875,20 @@ name = "esp-metadata-generated"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42c2ee95b945a4780796e4359e72c033aed3b45073880e8029458f538532db8a"
+
+[[package]]
+name = "esp-nvs"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b61bade3acc39e566697bd215068384afba840999fcd8e9366702f267034c7c0"
+dependencies = [
+ "defmt 1.1.1",
+ "embedded-storage",
+ "esp-hal",
+ "esp-storage",
+ "strum",
+ "thiserror",
+]
 
 [[package]]
 name = "esp-phy"

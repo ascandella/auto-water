@@ -1,13 +1,11 @@
 use defmt::info;
 use embassy_net::tcp::TcpSocket;
-use embassy_sync::blocking_mutex::raw::NoopRawMutex;
-use embassy_sync::mutex::Mutex;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::Write;
 use esp_hal::system::software_reset;
-use esp_storage::FlashStorage;
 use httparse::{EMPTY_HEADER, Request, Status};
 
+use crate::config;
 use crate::ota;
 
 const MAX_HEADERS: usize = 16;
@@ -45,15 +43,11 @@ pub trait Handler {
 
 pub struct Server<H: Handler> {
     handler: H,
-    flash: Mutex<NoopRawMutex, FlashStorage<'static>>,
 }
 
 impl<H: Handler> Server<H> {
-    pub fn new(handler: H, flash: FlashStorage<'static>) -> Self {
-        Self {
-            handler,
-            flash: Mutex::new(flash),
-        }
+    pub fn new(handler: H) -> Self {
+        Self { handler }
     }
 
     pub async fn run(&self, stack: embassy_net::Stack<'static>) {
@@ -146,7 +140,7 @@ impl<H: Handler> Server<H> {
 
         info!("OTA: starting, {} bytes", content_length);
 
-        let mut flash = self.flash.lock().await;
+        let mut flash = config::take_flash();
         match ota::perform_ota(&mut flash, socket, content_length, initial_body).await {
             Ok(()) => {
                 info!("OTA: write complete, sending response");
@@ -159,6 +153,7 @@ impl<H: Handler> Server<H> {
             }
             Err(e) => {
                 defmt::error!("OTA failed: {:?}", e);
+                config::store_flash(flash);
                 let _ = socket
                     .write_all(b"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nOTA failed")
                     .await;
