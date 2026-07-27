@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, store-prefs-to-flash]
   pull_request:
+  workflow_dispatch:
 
 env:
   RUSTUP_TOOLCHAIN: stable
