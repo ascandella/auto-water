@@ -91,7 +91,10 @@ async fn main(spawner: Spawner) {
         info!("IP: {}", config.address);
     }
 
-    let server = Server::new(App, esp_storage::FlashStorage::new(peripherals.FLASH));
+    auto_water::config::store_flash(esp_storage::FlashStorage::new(peripherals.FLASH));
+    auto_water::config::load_from_nvs();
+
+    let server = Server::new(App);
     server.run(stack).await;
 }
 

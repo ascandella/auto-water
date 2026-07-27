@@ -2,7 +2,7 @@ use core::cell::RefCell;
 
 use defmt::info;
 
-use crate::config::CONFIG;
+use crate::config::{self, CONFIG};
 use crate::pins::FLOAT_PIN;
 use crate::pump;
 use crate::server::{Handler, Response};
@@ -71,6 +71,8 @@ impl App {
                     CONFIG.borrow(cs).borrow_mut().pump_duration_secs = secs;
                 });
             }
+
+            config::save_to_nvs();
         }
 
         let cfg = critical_section::with(|cs| {
