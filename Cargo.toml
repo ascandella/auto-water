@@ -7,9 +7,24 @@ version      = "0.1.0"
 [[bin]]
 name = "auto-water"
 path = "./src/bin/main.rs"
+required-features = ["target-esp"]
+
+[features]
+default = ["target-esp"]
+target-esp = [
+  "dep:esp-hal",
+  "dep:esp-rtos",
+  "dep:esp-bootloader-esp-idf",
+  "dep:esp-storage",
+  "dep:esp-nvs",
+  "dep:esp-alloc",
+  "dep:esp-backtrace",
+  "dep:esp-println",
+  "dep:esp-radio",
+]
 
 [dependencies]
-esp-hal = { version = "~1.1.0", features = ["defmt", "esp32", "unstable"] }
+esp-hal = { version = "~1.1.0", features = ["defmt", "esp32", "unstable"], optional = true }
 
 esp-rtos = { version = "0.3.0", features = [
   "defmt",
@@ -17,30 +32,30 @@ esp-rtos = { version = "0.3.0", features = [
   "esp-alloc",
   "esp-radio",
   "esp32",
-] }
+], optional = true }
 
 defmt                  = "1.0.1"
-esp-bootloader-esp-idf = { version = "0.5.0", features = ["defmt", "esp32"] }
-esp-storage           = { version = "0.9.0", features = ["defmt", "esp32", "esp-hal"] }
-esp-nvs               = { version = "0.5.0", features = ["esp32", "defmt"] }
+esp-bootloader-esp-idf = { version = "0.5.0", features = ["defmt", "esp32"], optional = true }
+esp-storage           = { version = "0.9.0", features = ["defmt", "esp32", "esp-hal"], optional = true }
+esp-nvs               = { version = "0.5.0", features = ["esp32", "defmt"], optional = true }
 
 critical-section = "1.2.0"
 embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 embedded-storage  = "0.3.1"
-esp-alloc = { version = "0.10.0", features = ["defmt"] }
+esp-alloc = { version = "0.10.0", features = ["defmt"], optional = true }
 esp-backtrace = { version = "0.19.0", features = [
   "defmt",
   "esp32",
   "panic-handler",
-] }
-esp-println = { version = "0.17.0", features = ["defmt-espflash", "esp32"] }
+], optional = true }
+esp-println = { version = "0.17.0", features = ["defmt-espflash", "esp32"], optional = true }
 esp-radio = { version = "0.18.0", features = [
   "defmt",
   "esp-alloc",
   "esp32",
   "unstable",
   "wifi",
-] }
+], optional = true }
 
 embassy-executor = { version = "0.10.0", default-features = false }
 embassy-sync      = { version = "0.8.0", default-features = false }
@@ -55,6 +70,9 @@ embassy-net      = { version = "0.9.1", features = [
 ] }
 httparse          = { version = "1.10.1", default-features = false }
 static_cell       = "2.0"
+
+[target.'cfg(not(target_arch = "xtensa"))'.dependencies]
+critical-section = { version = "1.2.0", features = ["std"] }
 
 
 # For fine tuning these settings, please refer to https://doc.rust-lang.org/cargo/reference/profiles.html

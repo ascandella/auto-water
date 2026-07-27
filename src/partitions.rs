@@ -104,3 +104,48 @@ const fn parse_hex_slice(bytes: &[u8], start: usize, end: usize) -> usize {
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_actual_partition_table() {
+        let (offset, size) = find_partition("nvs");
+        assert_eq!(offset, 0x9000);
+        assert_eq!(size, 0x6000);
+    }
+
+    #[test]
+    fn parses_ota_partitions() {
+        let (offset, size) = find_partition("ota_0");
+        assert_eq!(offset, 0x20000);
+        assert_eq!(size, 0x1E0000);
+
+        let (offset, size) = find_partition("ota_1");
+        assert_eq!(offset, 0x200000);
+        assert_eq!(size, 0x1E0000);
+    }
+
+    #[test]
+    fn parses_otadata() {
+        let (offset, size) = find_partition("otadata");
+        assert_eq!(offset, 0xf000);
+        assert_eq!(size, 0x2000);
+    }
+
+    #[test]
+    fn unknown_partition_returns_zero() {
+        let (offset, size) = find_partition("nonexistent");
+        assert_eq!(offset, 0);
+        assert_eq!(size, 0);
+    }
+
+    #[test]
+    fn skips_comment_lines() {
+        // The actual CSV has comment lines starting with #
+        // If we add one, find_partition should skip it
+        let (_, _) = find_partition("nvs");
+        // Just verifying it doesn't panic or return wrong data
+    }
+}

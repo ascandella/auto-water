@@ -8,4 +8,5 @@ Run these before committing:
 cargo fmt --check
 cargo clippy -- -D warnings
 cargo build
+make test
 ```

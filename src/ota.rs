@@ -1,9 +1,16 @@
+#[cfg(feature = "target-esp")]
 use defmt::info;
+#[cfg(feature = "target-esp")]
 use embassy_net::tcp::TcpSocket;
+#[cfg(feature = "target-esp")]
 use embedded_storage::Storage;
+#[cfg(feature = "target-esp")]
 use esp_bootloader_esp_idf::ota::OtaImageState;
+#[cfg(feature = "target-esp")]
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
+#[cfg(feature = "target-esp")]
 use esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN;
+#[cfg(feature = "target-esp")]
 use esp_storage::FlashStorage;
 
 pub const OTA_PASSWORD: &str = match option_env!("OTA_PASSWORD") {
@@ -11,8 +18,10 @@ pub const OTA_PASSWORD: &str = match option_env!("OTA_PASSWORD") {
     None => "auto-water-ota",
 };
 
+#[cfg(feature = "target-esp")]
 const WRITE_CHUNK_SIZE: usize = 4096;
 
+#[cfg(feature = "target-esp")]
 #[derive(Debug)]
 pub enum OtaError {
     UpdaterInit,
@@ -22,6 +31,7 @@ pub enum OtaError {
     Activate,
 }
 
+#[cfg(feature = "target-esp")]
 impl defmt::Format for OtaError {
     fn format(&self, fmt: defmt::Formatter) {
         match self {
@@ -41,6 +51,7 @@ pub fn check_auth(auth_header: Option<&[u8]>) -> bool {
     }
 }
 
+#[cfg(feature = "target-esp")]
 pub async fn perform_ota(
     flash: &mut FlashStorage<'static>,
     socket: &mut TcpSocket<'_>,
