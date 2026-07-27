@@ -24,7 +24,6 @@ esp-bootloader-esp-idf = { version = "0.5.0", features = ["defmt", "esp32"] }
 esp-storage           = { version = "0.9.0", features = ["defmt", "esp32", "esp-hal"] }
 
 critical-section = "1.2.0"
-embedded-io = { version = "0.7.1", features = ["defmt"] }
 embedded-io-async = { version = "0.7.0", features = ["defmt"] }
 embedded-storage  = "0.3.1"
 esp-alloc = { version = "0.10.0", features = ["defmt"] }
@@ -55,19 +54,6 @@ embassy-net      = { version = "0.9.1", features = [
 ] }
 httparse          = { version = "1.10.1", default-features = false }
 static_cell       = "2.0"
-smoltcp = { version = "0.13.0", default-features = false, features = [
-  "defmt",
-  "medium-ethernet",
-  "multicast",
-  "proto-dhcpv4",
-  "proto-dns",
-  "proto-ipv4",
-  "socket-dns",
-  "socket-icmp",
-  "socket-raw",
-  "socket-tcp",
-  "socket-udp",
-] }
 
 
 # For fine tuning these settings, please refer to https://doc.rust-lang.org/cargo/reference/profiles.html
