@@ -71,6 +71,9 @@ embassy-net      = { version = "0.9.1", features = [
 httparse          = { version = "1.10.1", default-features = false }
 static_cell       = "2.0"
 
+[target.'cfg(not(target_arch = "xtensa"))'.dependencies]
+critical-section = { version = "1.2.0", features = ["std"] }
+
 
 # For fine tuning these settings, please refer to https://doc.rust-lang.org/cargo/reference/profiles.html
 [profile.dev]
